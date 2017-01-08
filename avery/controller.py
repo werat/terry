@@ -31,7 +31,7 @@ class AveryController(IAveryJobController, IAveryWorkerController):
 
         self._jobs.create_indexes([idx('job_id', unique=True),
                                    idx('job_id', 'version'),
-                                   idx('tags', 'status', 'worker_heartbeat')])
+                                   idx('tag', 'status', 'worker_heartbeat')])
 
     def _job_from_doc(self, doc):
         return AveryJob(doc.pop('job_id'), **doc)

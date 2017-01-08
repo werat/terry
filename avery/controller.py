@@ -3,8 +3,10 @@ from uuid import uuid4
 
 import pymongo
 
-from .api import AveryJob, IAveryJobController, IAveryWorkerController
-from .api import RetriableError, ConcurrencyError
+from .api import (
+    AveryJob, IAveryJobController, IAveryWorkerController,
+    RetriableError, ConcurrencyError
+)
 
 
 __all__ = ['AveryController']

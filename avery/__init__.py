@@ -1,2 +1,2 @@
-from .api import AveryJob, IAveryJobController, IAveryWorkerController  # noqa
-from .controller import AveryController  # noqa
+from .api import Job, IJobController, IWorkerController  # noqa
+from .controller import Controller  # noqa

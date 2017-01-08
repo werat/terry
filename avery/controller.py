@@ -4,15 +4,15 @@ from uuid import uuid4
 import pymongo
 
 from .api import (
-    AveryJob, IAveryJobController, IAveryWorkerController,
+    Job, IJobController, IWorkerController,
     RetriableError, ConcurrencyError
 )
 
 
-__all__ = ['AveryController']
+__all__ = ['Controller']
 
 
-class AveryController(IAveryJobController, IAveryWorkerController):
+class Controller(IJobController, IWorkerController):
     HEARTBEAT_TIMEOUT = timedelta(minutes=10)
 
     def __init__(self, db_uri, col_name='jobs'):
@@ -36,7 +36,7 @@ class AveryController(IAveryJobController, IAveryWorkerController):
                                    idx('tag', 'status', 'worker_heartbeat')])
 
     def _job_from_doc(self, doc):
-        return AveryJob(doc.pop('job_id'), **doc)
+        return Job(doc.pop('job_id'), **doc)
 
     ########################
     #    PUBLIC METHODS    #
@@ -46,7 +46,7 @@ class AveryController(IAveryJobController, IAveryWorkerController):
         return uuid4().hex
 
     #############################
-    #    IAveryJobController    #
+    #    IJobController    #
     #############################
 
     def _update_job(self, job_id, version, **kwargs):
@@ -75,7 +75,7 @@ class AveryController(IAveryJobController, IAveryWorkerController):
 
     def create_job(self, job_id, tag, args=None):
         doc = {'job_id': job_id, 'tag': tag, 'args': args or {},
-               'version': 0, 'status': AveryJob.IDLE}
+               'version': 0, 'status': Job.IDLE}
         try:
             self._jobs.insert_one(doc)
         except pymongo.errors.AutoReconnect:
@@ -84,7 +84,7 @@ class AveryController(IAveryJobController, IAveryWorkerController):
             pass
 
     def cancel_job(self, job_id, version):
-        return self._update_job(job_id, version, status=AveryJob.CANCELLED)
+        return self._update_job(job_id, version, status=Job.CANCELLED)
 
     def delete_job(self, job_id, version):
         try:
@@ -98,7 +98,7 @@ class AveryController(IAveryJobController, IAveryWorkerController):
         assert r.deleted_count == 1
 
     ################################
-    #    IAveryWorkerController    #
+    #    IWorkerController    #
     ################################
 
     def _find_one_and_update(self, query, update):
@@ -112,20 +112,20 @@ class AveryController(IAveryJobController, IAveryWorkerController):
             return self._job_from_doc(r)
 
     def _try_acquire_idle_job(self, tags, worker_id):
-        query = {'tag': {'$in': tags}, 'status': AveryJob.IDLE}
+        query = {'tag': {'$in': tags}, 'status': Job.IDLE}
         update = {'$inc': {'version': 1},
-                  '$set': {'status': AveryJob.LOCKED,
+                  '$set': {'status': Job.LOCKED,
                            'worker_id': worker_id,
                            'worker_heartbeat': datetime.utcnow()}}
 
         return self._find_one_and_update(query, update)
 
     def _try_reacquire_locked_job(self, tags, worker_id):
-        query = {'tag': {'$in': tags}, 'status': AveryJob.LOCKED,
+        query = {'tag': {'$in': tags}, 'status': Job.LOCKED,
                  'worker_heartbeat': {'$lt': datetime.utcnow() - self.HEARTBEAT_TIMEOUT}}
 
         update = {'$inc': {'version': 1},
-                  '$set': {'status': AveryJob.LOCKED,
+                  '$set': {'status': Job.LOCKED,
                            'worker_id': worker_id,
                            'worker_heartbeat': datetime.utcnow()}}
 
@@ -147,4 +147,4 @@ class AveryController(IAveryJobController, IAveryWorkerController):
         return self._update_job(job_id, version, worker_heartbeat=datetime.utcnow())
 
     def finalize_job(self, job_id, version, worker_exception=None):
-        return self._update_job(job_id, version, status=AveryJob.COMPLETED, worker_exception=worker_exception)
+        return self._update_job(job_id, version, status=Job.COMPLETED, worker_exception=worker_exception)

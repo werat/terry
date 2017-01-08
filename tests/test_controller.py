@@ -1,7 +1,7 @@
 import pytest
 
-from avery.api import AveryJob
-from avery.controller import AveryController
+from avery.api import Job
+from avery.controller import Controller
 
 
 @pytest.fixture
@@ -12,7 +12,7 @@ def controller():
     client = pymongo.MongoClient(db_uri)
     client.drop_database(client.get_default_database().name)
 
-    yield AveryController(db_uri)
+    yield Controller(db_uri)
 
 
 def test_create_job(controller):
@@ -21,7 +21,7 @@ def test_create_job(controller):
     job = controller.get_job(job_id)
 
     assert job.id == job_id
-    assert job.status == AveryJob.IDLE
+    assert job.status == Job.IDLE
     assert job.args == {'payload': 42}
     assert job.worker_id is None
 

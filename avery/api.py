@@ -1,4 +1,4 @@
-class AveryJob:
+class Job:
     IDLE = 'idle'
     LOCKED = 'locked'
     CANCELLED = 'cancelled'
@@ -13,7 +13,7 @@ class AveryJob:
         self.tag = tag
         self.args = args
         self.version = version
-        self.status = status or AveryJob.IDLE
+        self.status = status or Job.IDLE
         self.worker_id = worker_id
         self.worker_heartbeat = worker_heartbeat
         self.worker_exception = worker_exception
@@ -31,7 +31,7 @@ class ConcurrencyError(Exception):
     pass
 
 
-class IAveryJobController:
+class IJobController:
     def get_job(self, job_id):
         pass
 
@@ -45,7 +45,7 @@ class IAveryJobController:
         pass
 
 
-class IAveryWorkerController:
+class IWorkerController:
     def acquire_job(self, tags, worker_id):
         pass
 

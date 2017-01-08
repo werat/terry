@@ -17,7 +17,7 @@ def controller():
 
 def test_create_job(controller):
     job_id = controller.create_job_id()
-    controller.create_job(job_id, ['test-tag'], {'payload': 42})
+    controller.create_job(job_id, 'test-tag', {'payload': 42})
     job = controller.get_job(job_id)
 
     assert job.id == job_id
@@ -28,7 +28,7 @@ def test_create_job(controller):
 
 def test_acquire_job(controller):
     job_id = controller.create_job_id()
-    controller.create_job(job_id, ['test-tag'])
+    controller.create_job(job_id, 'test-tag')
 
     job_1 = controller.acquire_job(['test-tag'], 'test-worker')
     assert job_1.id == job_id
@@ -40,7 +40,7 @@ def test_acquire_job(controller):
 
 def test_reacquire_job(controller):
     job_id = controller.create_job_id()
-    controller.create_job(job_id, ['test-tag'])
+    controller.create_job(job_id, 'test-tag')
 
     job_1 = controller.acquire_job(['test-tag'], 'test-worker')
     assert job_1.id == job_id

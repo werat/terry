@@ -76,8 +76,8 @@ class AveryController(IAveryJobController, IAveryWorkerController):
 
         return self._job_from_doc(doc)
 
-    def create_job(self, job_id, tags, args=None):
-        doc = {'job_id': job_id, 'tags': tags, 'args': args or {},
+    def create_job(self, job_id, tag, args=None):
+        doc = {'job_id': job_id, 'tag': tag, 'args': args or {},
                'version': 0, 'status': AveryJob.IDLE}
         try:
             self._jobs.insert_one(doc)
@@ -115,7 +115,7 @@ class AveryController(IAveryJobController, IAveryWorkerController):
             return self._job_from_doc(r)
 
     def _try_acquire_idle_job(self, tags, worker_id):
-        query = {'tags': {'$in': tags}, 'status': AveryJob.IDLE}
+        query = {'tag': {'$in': tags}, 'status': AveryJob.IDLE}
         update = {'$inc': {'version': 1},
                   '$set': {'status': AveryJob.LOCKED,
                            'worker_id': worker_id,
@@ -124,7 +124,7 @@ class AveryController(IAveryJobController, IAveryWorkerController):
         return self._find_one_and_update(query, update)
 
     def _try_reacquire_locked_job(self, tags, worker_id):
-        query = {'tags': {'$in': tags}, 'status': AveryJob.LOCKED,
+        query = {'tag': {'$in': tags}, 'status': AveryJob.LOCKED,
                  'worker_heartbeat': {'$lt': datetime.utcnow() - self.HEARTBEAT_TIMEOUT}}
 
         update = {'$inc': {'version': 1},

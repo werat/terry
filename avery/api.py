@@ -4,13 +4,13 @@ class AveryJob:
     CANCELLED = 'cancelled'
     COMPLETED = 'completed'
 
-    def __init__(self, id_, tags, args, version, *,
+    def __init__(self, id_, tag, args, version, *,
                  status=None,
                  worker_id=None,
                  worker_heartbeat=None,
                  worker_exception=None):
         self.id = id_
-        self.tags = tags
+        self.tag = tag
         self.args = args
         self.version = version
         self.status = status or AveryJob.IDLE
@@ -23,7 +23,7 @@ class IAveryJobController:
     def get_job(self, job_id):
         pass
 
-    def create_job(self, job_id, tags, args=None):
+    def create_job(self, job_id, tag, args=None):
         pass
 
     def cancel_job(self, job_id, version):

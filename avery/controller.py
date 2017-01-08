@@ -61,6 +61,8 @@ class AveryController(IAveryJobController, IAveryWorkerController):
         if r is None:
             raise ConcurrencyError('invalid version: {}'.format(version))
 
+        return self._job_from_doc(r)
+
     def get_job(self, job_id):
         try:
             doc = self._jobs.find_one({'job_id': job_id}, projection={'_id': False})
@@ -80,7 +82,7 @@ class AveryController(IAveryJobController, IAveryWorkerController):
             pass
 
     def cancel_job(self, job_id, version):
-        self._update_job(job_id, version, status=AveryJob.CANCELLED)
+        return self._update_job(job_id, version, status=AveryJob.CANCELLED)
 
     def delete_job(self, job_id, version):
         try:
@@ -140,7 +142,7 @@ class AveryController(IAveryJobController, IAveryWorkerController):
         return job
 
     def heartbeat_job(self, job_id, version):
-        self._update_job(job_id, version, worker_heartbeat=datetime.utcnow())
+        return self._update_job(job_id, version, worker_heartbeat=datetime.utcnow())
 
-    def finalize_job(self, job_id, version, status, worker_exception=None):
-        self._update_job(job_id, version, status=status, worker_exception=worker_exception)
+    def finalize_job(self, job_id, version, worker_exception=None):
+        return self._update_job(job_id, version, status=AveryJob.COMPLETED, worker_exception=worker_exception)

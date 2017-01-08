@@ -18,6 +18,10 @@ class AveryJob:
         self.worker_heartbeat = worker_heartbeat
         self.worker_exception = worker_exception
 
+    @property
+    def failed(self):
+        return self.worker_exception is not None
+
 
 class RetriableError(Exception):
     pass
@@ -48,5 +52,5 @@ class IAveryWorkerController:
     def heartbeat_job(self, job_id, version):
         pass
 
-    def finalize_job(self, job_id, version, status, worker_exception=None):
+    def finalize_job(self, job_id, version, worker_exception=None):
         pass

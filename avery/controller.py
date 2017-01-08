@@ -4,17 +4,10 @@ from uuid import uuid4
 import pymongo
 
 from .api import AveryJob, IAveryJobController, IAveryWorkerController
+from .api import RetriableError, ConcurrencyError
 
 
-__all__ = ['RetriableError', 'ConcurrencyError', 'AveryController']
-
-
-class RetriableError(Exception):
-    pass
-
-
-class ConcurrencyError(Exception):
-    pass
+__all__ = ['AveryController']
 
 
 class AveryController(IAveryJobController, IAveryWorkerController):

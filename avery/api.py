@@ -19,6 +19,14 @@ class AveryJob:
         self.worker_exception = worker_exception
 
 
+class RetriableError(Exception):
+    pass
+
+
+class ConcurrencyError(Exception):
+    pass
+
+
 class IAveryJobController:
     def get_job(self, job_id):
         pass

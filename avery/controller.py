@@ -45,9 +45,9 @@ class Controller(IJobController, IWorkerController):
     def create_job_id(self):
         return uuid4().hex
 
-    #############################
+    ########################
     #    IJobController    #
-    #############################
+    ########################
 
     def _update_job(self, job_id, version, **kwargs):
         query = {'job_id': job_id, 'version': version}
@@ -97,9 +97,9 @@ class Controller(IJobController, IWorkerController):
 
         assert r.deleted_count == 1
 
-    ################################
+    ###########################
     #    IWorkerController    #
-    ################################
+    ###########################
 
     def _find_one_and_update(self, query, update):
         try:

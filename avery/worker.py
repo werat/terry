@@ -10,10 +10,10 @@ import traceback
 from .api import Job, ConcurrencyError, RetriableError
 
 
-__all__ = ['InterruptTask', 'Worker', 'JobChannel']
+__all__ = ['InterruptJob', 'Worker', 'JobChannel']
 
 
-class InterruptTask(Exception):
+class InterruptJob(Exception):
     pass
 
 
@@ -64,7 +64,7 @@ class JobChannel:
 
     def interrupt_if_requested(self):
         if self.cancelled or self.revoked:
-            raise InterruptTask
+            raise InterruptJob
 
     def requeue_job(self, run_at):
         self.__ctx.requeue_job(run_at)
@@ -85,7 +85,7 @@ class WorkerThread(threading.Thread):
     def run(self):
         try:
             super(WorkerThread, self).run()
-        except InterruptTask:
+        except InterruptJob:
             self.interrupted = True
         except _RequeueRequested:
             pass
@@ -156,19 +156,19 @@ class Worker:
                     self._try_acquire_job()
 
                 elif self._job_ctx.outdated:
-                    self._try_update_current_task()
+                    self._try_update_current_job()
 
                 elif self._job_ctx.cancelled or self._job_ctx.revoked:
                     self._wait_for_worker_thread_and_cleanup()
 
                 elif self._worker_thread.is_alive():
-                    self._try_heartbeat_current_task()
+                    self._try_heartbeat_current_job()
 
                 elif self._job_ctx.requeue_requested:
-                    self._try_requeue_current_task()
+                    self._try_requeue_current_job()
 
-                else:  # worker has finished processing the task
-                    self._try_finalize_current_task()
+                else:  # worker has finished processing the job
+                    self._try_finalize_current_job()
 
             except RetriableError:
                 retry_delay = 1 if retry_delay == 0 else min(10, retry_delay * 2)
@@ -189,7 +189,7 @@ class Worker:
         else:
             time.sleep(math.e - random.random())
 
-    def _try_update_current_task(self):
+    def _try_update_current_job(self):
         job = self._controller.get_job(self._job_ctx.job.id)
 
         self._job_ctx.update(job)
@@ -204,7 +204,7 @@ class Worker:
         if self._worker_thread.is_alive():
             if self._interrupt_via_exception and not self._worker_thread.interrupt_requested:
                 ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(self._worker_thread.ident),
-                                                           ctypes.py_object(InterruptTask))
+                                                           ctypes.py_object(InterruptJob))
                 self._worker_thread.interrupt_requested = True
                 self.logger.info('[%s] Worker thread with job %s was interrupted via exception',
                                  self._id, self._job_ctx.job.id)
@@ -215,7 +215,7 @@ class Worker:
             self._job_ctx = None
             self._worker_thread = None
 
-    def _try_heartbeat_current_task(self):
+    def _try_heartbeat_current_job(self):
         try:
             job = self._controller.heartbeat_job(self._job_ctx.job.id, self._job_ctx.job.version)
         except ConcurrencyError:
@@ -229,7 +229,7 @@ class Worker:
             self.logger.info('[%s] Failed to heartbeat job %s due to version mismatch',
                              self._id, self._job_ctx.job.id)
 
-    def _try_requeue_current_task(self):
+    def _try_requeue_current_job(self):
         assert not self._worker_thread.is_alive()
         # requeue current job with new run_at time
         try:
@@ -243,7 +243,7 @@ class Worker:
             self._job_ctx = None
             self._worker_thread = None
 
-    def _try_finalize_current_task(self):
+    def _try_finalize_current_job(self):
         assert not self._worker_thread.is_alive()
         # worker thread has finished, we should mark job as COMPLETED
         if self._worker_thread.has_failed:

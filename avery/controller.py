@@ -67,11 +67,14 @@ class Controller(IJobController, IWorkerController):
 
     def get_job(self, job_id):
         try:
-            doc = self._jobs.find_one({'job_id': job_id}, projection={'_id': False})
+            r = self._jobs.find_one({'job_id': job_id}, projection={'_id': False})
         except pymongo.errors.AutoReconnect:
             raise RetriableError('find_one has failed due to the AutoReconnect error')
 
-        return self._job_from_doc(doc)
+        if r:
+            return self._job_from_doc(r)
+
+        return None
 
     def create_job(self, job_id, tag, args=None):
         doc = {'job_id': job_id, 'tag': tag, 'args': args or {},
@@ -110,6 +113,8 @@ class Controller(IJobController, IWorkerController):
 
         if r:
             return self._job_from_doc(r)
+
+        return None
 
     def _try_acquire_idle_job(self, tags, worker_id):
         query = {'tag': {'$in': tags}, 'status': Job.IDLE}

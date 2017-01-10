@@ -240,6 +240,7 @@ class Worker:
             self.logger.info('[%s] Failed to mark job %s as completed due to version mismatch',
                              self._id, self._job_ctx.job.id)
         else:
+            self.logger.info('[%s] Job %s has been requeued', self._id, self._job_ctx.job.id)
             self._job_ctx = None
             self._worker_thread = None
 

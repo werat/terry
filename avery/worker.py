@@ -17,11 +17,17 @@ class InterruptTask(Exception):
     pass
 
 
+class _RequeueRequested(Exception):
+    pass
+
+
 class JobContext:
     def __init__(self, worker_id, job):
         self.worker_id = worker_id
         self.job = job
         self.outdated = False
+        self.requeue_requested = False
+        self.requeue_for = None
 
     def update(self, job):
         self.job = job
@@ -34,6 +40,10 @@ class JobContext:
     @property
     def revoked(self):
         return self.job.worker_id != self.worker_id
+
+    def requeue_job(self, run_at):
+        self.requeue_requested = True
+        self.requeue_for = run_at
 
 
 class JobChannel:
@@ -56,6 +66,10 @@ class JobChannel:
         if self.cancelled or self.revoked:
             raise InterruptTask
 
+    def requeue_job(self, run_at):
+        self.__ctx.requeue_job(run_at)
+        raise _RequeueRequested
+
 
 class WorkerThread(threading.Thread):
     def __init__(self, *args, **kwargs):
@@ -73,6 +87,8 @@ class WorkerThread(threading.Thread):
             super(WorkerThread, self).run()
         except InterruptTask:
             self.interrupted = True
+        except _RequeueRequested:
+            pass
         except:
             self.exc_info = sys.exc_info()
 
@@ -148,8 +164,11 @@ class Worker:
                 elif self._worker_thread.is_alive():
                     self._try_heartbeat_current_task()
 
+                elif self._job_ctx.requeue_requested:
+                    self._try_requeue_current_task()
+
                 else:  # worker has finished processing the task
-                    self._try_mark_current_task_as_done()
+                    self._try_finalize_current_task()
 
             except RetriableError:
                 retry_delay = 1 if retry_delay == 0 else min(10, retry_delay * 2)
@@ -210,7 +229,22 @@ class Worker:
             self.logger.info('[%s] Failed to heartbeat job %s due to version mismatch',
                              self._id, self._job_ctx.job.id)
 
-    def _try_mark_current_task_as_done(self):
+    def _try_requeue_current_task(self):
+        assert not self._worker_thread.is_alive()
+        # requeue current job with new run_at time
+        try:
+            self._controller.requeue_job(self._job_ctx.job.id, self._job_ctx.job.version,
+                                         run_at=self._job_ctx.requeue_for)
+        except ConcurrencyError:
+            self._job_ctx.outdated = True
+            self.logger.info('[%s] Failed to mark job %s as completed due to version mismatch',
+                             self._id, self._job_ctx.job.id)
+        else:
+            self._job_ctx = None
+            self._worker_thread = None
+
+    def _try_finalize_current_task(self):
+        assert not self._worker_thread.is_alive()
         # worker thread has finished, we should mark job as COMPLETED
         if self._worker_thread.has_failed:
             reason = str(self._worker_thread.exc_info[1])

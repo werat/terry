@@ -6,6 +6,10 @@ class Job:
 
     def __init__(self, id_, tag, args, version, *,
                  status=None,
+                 created_at=None,
+                 locked_at=None,
+                 completed_at=None,
+                 run_at=None,
                  worker_id=None,
                  worker_heartbeat=None,
                  worker_exception=None):
@@ -14,6 +18,10 @@ class Job:
         self.args = args
         self.version = version
         self.status = status or Job.IDLE
+        self.created_at = created_at
+        self.locked_at = locked_at
+        self.completed_at = completed_at
+        self.run_at = run_at
         self.worker_id = worker_id
         self.worker_heartbeat = worker_heartbeat
         self.worker_exception = worker_exception
@@ -35,7 +43,7 @@ class IJobController:
     def get_job(self, job_id):
         pass
 
-    def create_job(self, job_id, tag, args=None):
+    def create_job(self, job_id, tag, args=None, run_at=None):
         pass
 
     def cancel_job(self, job_id, version):
@@ -53,4 +61,7 @@ class IWorkerController:
         pass
 
     def finalize_job(self, job_id, version, worker_exception=None):
+        pass
+
+    def requeue_job(self, job_id, version, run_at):
         pass

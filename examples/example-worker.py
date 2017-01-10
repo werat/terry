@@ -3,6 +3,8 @@
 import time
 import logging
 
+from datetime import datetime, timedelta
+
 from avery.controller import Controller
 from avery.worker import Worker, JobChannel  # noqa
 
@@ -10,8 +12,10 @@ from avery.worker import Worker, JobChannel  # noqa
 def work_func(channel: JobChannel):
     print('========= GOT JOB =========')
     print('id: ', channel.job.id)
+    print('locked_at: ', channel.job.locked_at)
     print('args: ', channel.job.args)
     print('===========================')
+    channel.requeue_job(datetime.utcnow() + timedelta(seconds=3))
 
 
 def setup_backend(db_uri):

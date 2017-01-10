@@ -33,7 +33,7 @@ class Controller(IJobController, IWorkerController):
 
         self._jobs.create_indexes([idx('job_id', unique=True),
                                    idx('job_id', 'version'),
-                                   idx('tag', 'status', 'worker_heartbeat')])
+                                   idx('tag', 'status', 'run_at', 'worker_heartbeat')])
 
     def _job_from_doc(self, doc):
         return Job(doc.pop('job_id'), **doc)
@@ -76,9 +76,9 @@ class Controller(IJobController, IWorkerController):
 
         return None
 
-    def create_job(self, job_id, tag, args=None):
-        doc = {'job_id': job_id, 'tag': tag, 'args': args or {},
-               'version': 0, 'status': Job.IDLE}
+    def create_job(self, job_id, tag, args=None, run_at=None):
+        doc = {'job_id': job_id, 'tag': tag, 'args': args or {}, 'run_at': run_at,
+               'version': 0, 'status': Job.IDLE, 'created_at': datetime.utcnow()}
         try:
             self._jobs.insert_one(doc)
         except pymongo.errors.AutoReconnect:
@@ -117,9 +117,12 @@ class Controller(IJobController, IWorkerController):
         return None
 
     def _try_acquire_idle_job(self, tags, worker_id):
-        query = {'tag': {'$in': tags}, 'status': Job.IDLE}
+        query = {'tag': {'$in': tags}, 'status': Job.IDLE,
+                 '$or': [{'run_at': None}, {'run_at': {'$lt': datetime.utcnow()}}]}
+
         update = {'$inc': {'version': 1},
                   '$set': {'status': Job.LOCKED,
+                           'locked_at': datetime.utcnow(),
                            'worker_id': worker_id,
                            'worker_heartbeat': datetime.utcnow()}}
 
@@ -131,6 +134,7 @@ class Controller(IJobController, IWorkerController):
 
         update = {'$inc': {'version': 1},
                   '$set': {'status': Job.LOCKED,
+                           'locked_at': datetime.utcnow(),
                            'worker_id': worker_id,
                            'worker_heartbeat': datetime.utcnow()}}
 
@@ -153,3 +157,8 @@ class Controller(IJobController, IWorkerController):
 
     def finalize_job(self, job_id, version, worker_exception=None):
         return self._update_job(job_id, version, status=Job.COMPLETED, worker_exception=worker_exception)
+
+    def requeue_job(self, job_id, version, run_at):
+        return self._update_job(job_id, version, status=Job.IDLE, run_at=run_at,
+                                locked_at=None, completed_at=None,
+                                worker_id=None, worker_heartbeat=None)

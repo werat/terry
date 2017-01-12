@@ -17,9 +17,15 @@ class Controller(IJobController, IWorkerController):
 
     def __init__(self, db_uri, col_name='jobs'):
         self._validate_db_uri(db_uri)
-        self._client = pymongo.MongoClient(db_uri)
+        self._client = self._create_mongo_client(db_uri)
         self._jobs = self._client.get_default_database()[col_name]
         self._ensure_indexes()
+
+    def _create_mongo_client(self, db_uri):
+        kwargs = {'socketTimeoutMS': 10000,
+                  'readPreference': 'primary',
+                  'fsync': True}
+        return pymongo.MongoClient(db_uri, **kwargs)
 
     def _validate_db_uri(self, uri):
         res = pymongo.uri_parser.parse_uri(uri)

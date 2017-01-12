@@ -63,5 +63,5 @@ class IWorkerController:
     def finalize_job(self, job_id, version, worker_exception=None):
         pass
 
-    def requeue_job(self, job_id, version, run_at):
+    def requeue_job(self, job_id, version, run_at=None):
         pass

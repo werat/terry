@@ -172,7 +172,7 @@ class Controller(IJobController, IWorkerController):
     def finalize_job(self, job_id, version, worker_exception=None):
         return self._update_job(job_id, version, status=Job.COMPLETED, worker_exception=worker_exception)
 
-    def requeue_job(self, job_id, version, run_at):
+    def requeue_job(self, job_id, version, run_at=None):
         return self._update_job(job_id, version, status=Job.IDLE, run_at=run_at,
                                 locked_at=None, completed_at=None,
                                 worker_id=None, worker_heartbeat=None)

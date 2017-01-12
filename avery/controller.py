@@ -1,3 +1,5 @@
+import sys
+
 from datetime import datetime, timedelta
 from uuid import uuid4
 
@@ -44,6 +46,12 @@ class Controller(IJobController, IWorkerController):
     def _job_from_doc(self, doc):
         return Job(doc.pop('job_id'), **doc)
 
+    def _raise_retriable_error(self, method):
+        exc_type, _, _ = sys.exc_info()
+        assert exc_type is not None  # should be called from the exception handler
+        exc_text = '{} has failed due to {}'.format(method, exc_type.__name__)
+        raise RetriableError(exc_text)
+
     ########################
     #    PUBLIC METHODS    #
     ########################
@@ -63,8 +71,8 @@ class Controller(IJobController, IWorkerController):
         try:
             r = self._jobs.find_one_and_update(query, update, projection={'_id': False},
                                                return_document=pymongo.collection.ReturnDocument.AFTER)
-        except pymongo.errors.AutoReconnect:
-            raise RetriableError('find_one_and_update has failed due to AutoReconnect')
+        except pymongo.errors.PyMongoError:
+            self._raise_retriable_error('find_one_and_update')
 
         if r is None:
             raise ConcurrencyError('invalid version: {}'.format(version))
@@ -74,8 +82,8 @@ class Controller(IJobController, IWorkerController):
     def get_job(self, job_id):
         try:
             r = self._jobs.find_one({'job_id': job_id}, projection={'_id': False})
-        except pymongo.errors.AutoReconnect:
-            raise RetriableError('find_one has failed due to the AutoReconnect error')
+        except pymongo.errors.PyMongoError:
+            self._raise_retriable_error('find_one')
 
         if r:
             return self._job_from_doc(r)
@@ -87,10 +95,10 @@ class Controller(IJobController, IWorkerController):
                'version': 0, 'status': Job.IDLE, 'created_at': datetime.utcnow()}
         try:
             self._jobs.insert_one(doc)
-        except pymongo.errors.AutoReconnect:
-            raise RetriableError('insert_one has failed due to the AutoReconnect error')
         except pymongo.errors.DuplicateKeyError:
-            pass
+            pass  # ok, job already exists
+        except pymongo.errors.PyMongoError:
+            self._raise_retriable_error('insert_one')
 
     def cancel_job(self, job_id, version):
         return self._update_job(job_id, version, status=Job.CANCELLED)
@@ -98,8 +106,8 @@ class Controller(IJobController, IWorkerController):
     def delete_job(self, job_id, version):
         try:
             r = self._jobs.delete_one({'job_id': job_id, 'version': version})
-        except pymongo.errors.AutoReconnect:
-            raise RetriableError('delete_one has failed due to AutoReconnect')
+        except pymongo.errors.PyMongoError:
+            self._raise_retriable_error('delete_one')
 
         if r.deleted_count == 0:
             raise ConcurrencyError('job_id={}, version={} not found'.format(job_id, version))
@@ -114,8 +122,8 @@ class Controller(IJobController, IWorkerController):
         try:
             r = self._jobs.find_one_and_update(query, update, projection={'_id': False},
                                                return_document=pymongo.collection.ReturnDocument.AFTER)
-        except pymongo.errors.AutoReconnect:
-            raise RetriableError('find_one_and_update has failed due to the AutoReconnect error')
+        except pymongo.errors.PyMongoError:
+            self._raise_retriable_error('find_one_and_update')
 
         if r:
             return self._job_from_doc(r)

@@ -66,7 +66,7 @@ class JobChannel:
         if self.cancelled or self.revoked:
             raise InterruptJob
 
-    def requeue_job(self, run_at):
+    def requeue_job(self, run_at=None):
         self.__ctx.requeue_job(run_at)
         raise _RequeueRequested
 
@@ -184,7 +184,7 @@ class Worker:
         if job:
             self._job_ctx = JobContext(self.id, job)
             self.logger.info('[%s] Acquired job %s', self._id, self._job_ctx.job.id)
-            self._worker_thread = WorkerThread(target=self._worker_func, args=(self._job_ctx,))
+            self._worker_thread = WorkerThread(target=self._worker_func, args=(JobChannel(self._job_ctx),))
             self._worker_thread.start()
         else:
             time.sleep(math.e - random.random())

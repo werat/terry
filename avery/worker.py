@@ -186,6 +186,7 @@ class Worker:
             self._job_ctx = JobContext(self.id, job)
             self.logger.info('[%s] Acquired job %s', self._id, self._job_ctx.job.id)
             self._worker_thread = WorkerThread(target=self._worker_func, args=(JobChannel(self._job_ctx),))
+            self._worker_thread.daemon = True  # to make force stop possible
             self._worker_thread.start()
         else:
             time.sleep(math.e - random.random())

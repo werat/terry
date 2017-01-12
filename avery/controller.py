@@ -23,7 +23,7 @@ class Controller(IJobController, IWorkerController):
 
     def _validate_db_uri(self, uri):
         res = pymongo.uri_parser.parse_uri(uri)
-        if 'database' not in res:
+        if res['database'] is None:
             raise Exception('You should explicitly specify database')
 
     def _ensure_indexes(self):

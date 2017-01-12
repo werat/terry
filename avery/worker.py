@@ -94,9 +94,9 @@ class WorkerThread(threading.Thread):
 
 
 class Worker:
-    def __init__(self, id_, job_tags, worker_func, controller, interrupt_via_exception=False):
+    def __init__(self, id_, job_tags, worker_func, controller, *, interrupt_via_exception=False):
         self._id = id_
-        self._job_tags = job_tags
+        self._job_tags = list(set(job_tags))
         self._worker_func = worker_func
         self._controller = controller
         self._interrupt_via_exception = interrupt_via_exception
@@ -122,7 +122,8 @@ class Worker:
         return self._main_loop_thread.is_alive()
 
     def start(self):
-        self.logger.info('[%s] Starting...', self._id)
+        self.logger.info('[%s] Listen for tags %s', self._id, self._job_tags)
+        self.logger.info('[%s] Starting worker...', self._id)
         self._main_loop_thread.start()
 
     def request_stop(self):

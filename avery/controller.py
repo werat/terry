@@ -26,7 +26,8 @@ class Controller(IJobController, IWorkerController):
     def _create_mongo_client(self, db_uri):
         kwargs = {'socketTimeoutMS': 10000,
                   'readPreference': 'primary',
-                  'fsync': True}
+                  'w': 'majority',
+                  'j': True}
         return pymongo.MongoClient(db_uri, **kwargs)
 
     def _validate_db_uri(self, uri):

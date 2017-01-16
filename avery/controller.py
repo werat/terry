@@ -27,6 +27,7 @@ class Controller(IJobController, IWorkerController):
         kwargs = {'socketTimeoutMS': 10000,
                   'readPreference': 'primary',
                   'w': 'majority',
+                  'wtimeout': 20000,
                   'j': True}
         return pymongo.MongoClient(db_uri, **kwargs)
 

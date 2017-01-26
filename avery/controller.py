@@ -26,10 +26,12 @@ class Controller(IJobController, IWorkerController):
     def _create_mongo_client(self, db_uri):
         kwargs = {'socketTimeoutMS': 10000,
                   'readPreference': 'primary',
-                  'readConcernLevel': 'linearizable',
                   'w': 'majority',
                   'wtimeout': 20000,
                   'j': True}
+        # TODO:
+        # We should use readConcernLevel=majority|linearizable,
+        # but this requires proper configuration of MongoDB server
         return pymongo.MongoClient(db_uri, **kwargs)
 
     def _validate_db_uri(self, uri):

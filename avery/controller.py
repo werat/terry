@@ -26,6 +26,7 @@ class Controller(IJobController, IWorkerController):
     def _create_mongo_client(self, db_uri):
         kwargs = {'socketTimeoutMS': 10000,
                   'readPreference': 'primary',
+                  'readConcernLevel': 'linearizable',
                   'w': 'majority',
                   'wtimeout': 20000,
                   'j': True}

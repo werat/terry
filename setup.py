@@ -8,6 +8,6 @@ setup(
     author='Andy Yankovsky',
     author_email='weratt@gmail.com',
     license='MIT',
-    packages=find_packages(exclude=['docs', 'tests']),
+    packages=find_packages(exclude=['docs', 'tests', 'examples']),
     install_requires=['pymongo<=3.4.0']
 )

@@ -1,12 +1,12 @@
 import pytest
 
-from avery.api import Job
-from avery.controller import Controller
+from terry.api import Job
+from terry.controller import Controller
 
 
 @pytest.fixture
 def controller():
-    db_uri = 'mongodb://localhost/avery-tests'
+    db_uri = 'mongodb://localhost/terry-tests'
 
     import pymongo
     client = pymongo.MongoClient(db_uri)

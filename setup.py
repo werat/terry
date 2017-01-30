@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='avery',
+    name='terry',
     version='0.0.1',
     description='',
-    url='https://github.com/werat/avery',
+    url='https://github.com/werat/terry',
     author='Andy Yankovsky',
     author_email='weratt@gmail.com',
     license='MIT',

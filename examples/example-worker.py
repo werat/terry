@@ -5,8 +5,8 @@ import logging
 
 from datetime import datetime, timedelta
 
-from avery.controller import Controller
-from avery.worker import Worker, JobChannel  # noqa
+from terry.controller import Controller
+from terry.worker import Worker, JobChannel  # noqa
 
 
 def work_func(channel: JobChannel):
@@ -27,7 +27,7 @@ def setup_backend(db_uri):
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s\t%(levelname)s:\t%(message)s', level=logging.INFO)
 
-    db_uri = 'mongodb://localhost/avery-example'
+    db_uri = 'mongodb://localhost/terry-example'
 
     setup_backend(db_uri)
 

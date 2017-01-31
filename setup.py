@@ -15,12 +15,19 @@ else:
 
 setup(
     name='terry',
-    version='0.0.1',
+    version='0.0.2',
     description='Distributed task queue',
     url='https://github.com/werat/terry',
     author='Andy Yankovsky',
     author_email='weratt@gmail.com',
     license='MIT',
+    classifiers=(
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: Implementation :: CPython',
+    ),
     cmdclass=cmdclass,
     packages=find_packages(exclude=['docs', 'tests', 'examples']),
     install_requires=['pymongo<=3.4.0']

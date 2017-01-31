@@ -4,7 +4,6 @@ from setuptools import setup, find_packages
 
 if sys.version_info < (3,):
     try:
-        raise Exception()
         from lib3to2.build import build_py_3to2
     except ImportError:
         print('Please, install the "3to2" package')

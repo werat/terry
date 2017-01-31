@@ -19,7 +19,7 @@ matrix:
 
 install: pip install tox
 
-script: tox
+script: python3 -m tox
 
 notifications:
   email: false

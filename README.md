@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/werat/avery.svg?branch=master)](https://travis-ci.org/werat/terry)
+[![Build Status](https://travis-ci.org/werat/terry.svg?branch=master)](https://travis-ci.org/werat/terry)
 
 # Terry
 

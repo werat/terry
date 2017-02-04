@@ -1,18 +1,4 @@
-import pytest
-
 from terry.api import Job
-from terry.controller import Controller
-
-
-@pytest.fixture
-def controller():
-    db_uri = 'mongodb://localhost/terry-tests'
-
-    import pymongo
-    client = pymongo.MongoClient(db_uri)
-    client.drop_database(client.get_default_database().name)
-
-    yield Controller(db_uri)
 
 
 def test_create_job(controller):

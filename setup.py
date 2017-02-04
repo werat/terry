@@ -30,5 +30,6 @@ setup(
     ),
     cmdclass=cmdclass,
     packages=find_packages(exclude=['docs', 'tests', 'examples']),
-    install_requires=['pymongo<=3.4.0']
+    install_requires=['pymongo<=3.4.0'],
+    tests_require=['pytest', 'pytest-timeout']
 )

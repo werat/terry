@@ -130,8 +130,13 @@ class Worker:
         self.logger.info('[%s] Got request to stop...', self._id)
         self._stop.set()
 
-    def join(self):
-        self._main_loop_thread.join()
+    def join(self, timeout=None):
+        if timeout is None:
+            # join without timeout will block signal handling
+            while self._main_loop_thread.is_alive():
+                self._main_loop_thread.join(0.1)
+        else:
+            self._main_loop_thread.join(timeout)
 
     def stop(self):
         self.request_stop()

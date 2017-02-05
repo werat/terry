@@ -1,4 +1,8 @@
-from threading import Event
+import os
+import signal
+import time
+
+from threading import Event, Thread
 
 import pytest
 
@@ -48,3 +52,23 @@ def test_worker_job_exception(controller, worker):
     assert job.status == Job.COMPLETED
     assert job.worker_exception['reason'] == 'exception from job'
     assert job.worker_id == worker.id
+
+
+@pytest.mark.timeout(10)
+def test_worker_signal_handling(controller, worker):
+
+    def handler(signum, frame):
+        worker.request_stop()
+
+    def signal_thread():
+        time.sleep(1)  # wait until worker.join() is called
+        os.kill(os.getpid(), signal.SIGUSR1)
+
+    signal.signal(signal.SIGUSR1, handler)
+
+    thread = Thread(target=signal_thread)
+    thread.start()
+
+    worker.join()
+
+    assert not worker.is_running

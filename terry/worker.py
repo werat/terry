@@ -120,6 +120,10 @@ class Worker:
     @property
     def is_running(self):
         return self._main_loop_thread.is_alive()
+    
+    @property
+    def is_busy(self):
+        return self._job_ctx is not None
 
     def start(self):
         self.logger.info('[%s] Listen for tags %s', self._id, self._job_tags)

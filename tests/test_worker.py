@@ -72,3 +72,27 @@ def test_worker_signal_handling(controller, worker):
     worker.join()
 
     assert not worker.is_running
+
+
+@pytest.mark.timeout(10)
+def test_worker_is_busy(controller, worker):
+    job_started = Event()
+    job_may_complete = Event()
+
+    def work_func(channel):
+        job_started.set()
+        job_may_complete.wait()
+
+    worker._worker_func = work_func
+
+    job_id = controller.create_job_id()
+    controller.create_job(job_id, 'test-tag')
+
+    job_started.wait()
+
+    assert worker.is_busy
+
+    job_may_complete.set()
+    worker.stop()
+
+    assert not worker.is_busy

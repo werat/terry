@@ -15,7 +15,7 @@ else:
 
 setup(
     name='terry',
-    version='0.0.2',
+    version='0.0.3',
     description='Distributed task queue',
     url='https://github.com/werat/terry',
     author='Andy Yankovsky',

@@ -61,6 +61,10 @@ class JobChannel:
     @property
     def revoked(self):
         return self.__ctx.revoked
+    
+    @property
+    def cancelled_or_revoked(self):
+        return self.cancelled or self.revoked
 
     def interrupt_if_requested(self):
         if self.cancelled or self.revoked:

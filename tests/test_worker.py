@@ -96,3 +96,29 @@ def test_worker_is_busy(controller, worker):
     worker.stop()
 
     assert not worker.is_busy
+
+
+@pytest.mark.timeout(10)
+def test_worker_requeue_job_on_error(controller, worker):
+    second_run = Event()
+
+    def work_func(channel):
+        channel.requeue_job_on_error()
+
+        if second_run.is_set():
+            # complete successfully
+            worker.request_stop()
+        else:
+            second_run.set()
+            raise Exception('error on first run')
+
+    worker._worker_func = work_func
+
+    job_id = controller.create_job_id()
+    controller.create_job(job_id, 'test-tag')
+
+    worker.join()
+
+    job = controller.get_job(job_id)
+    assert job.status == Job.COMPLETED
+    assert job.worker_exception is None

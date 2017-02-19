@@ -27,7 +27,8 @@ class JobContext:
         self.job = job
         self.outdated = False
         self.requeue_requested = False
-        self.requeue_for = None
+        self.requeue_run_at = None
+        self.requeue_on_error = False
 
     def update(self, job):
         self.job = job
@@ -43,7 +44,7 @@ class JobContext:
 
     def requeue_job(self, run_at):
         self.requeue_requested = True
-        self.requeue_for = run_at
+        self.requeue_run_at = run_at
 
 
 class JobChannel:
@@ -73,6 +74,9 @@ class JobChannel:
     def requeue_job(self, run_at=None):
         self.__ctx.requeue_job(run_at)
         raise _RequeueRequested
+
+    def requeue_job_on_error(self):
+        self.__ctx.requeue_on_error = True
 
 
 class WorkerThread(threading.Thread):
@@ -150,6 +154,14 @@ class Worker:
         self.request_stop()
         self.join()
 
+    def _should_requeue_current_job(self):
+        assert self._job_ctx is not None
+        assert self._worker_thread is not None
+        assert not self._worker_thread.is_alive()
+
+        return self._job_ctx.requeue_requested or \
+            self._worker_thread.has_failed and self._job_ctx.requeue_on_error
+
     def _loop(self):
         #
         retry_delay = 0
@@ -178,7 +190,7 @@ class Worker:
                 elif self._worker_thread.is_alive():
                     self._try_heartbeat_current_job()
 
-                elif self._job_ctx.requeue_requested:
+                elif self._should_requeue_current_job():
                     self._try_requeue_current_job()
 
                 else:  # worker has finished processing the job
@@ -249,7 +261,7 @@ class Worker:
         # requeue current job with new run_at time
         try:
             self._controller.requeue_job(self._job_ctx.job.id, self._job_ctx.job.version,
-                                         run_at=self._job_ctx.requeue_for)
+                                         run_at=self._job_ctx.requeue_run_at)
         except ConcurrencyError:
             self._job_ctx.outdated = True
             self.logger.info('[%s] Failed to mark job %s as completed due to version mismatch',

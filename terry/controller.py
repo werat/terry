@@ -180,4 +180,4 @@ class Controller(IJobController, IWorkerController):
     def requeue_job(self, job_id, version, run_at=None):
         return self._update_job(job_id, version, status=Job.IDLE, run_at=run_at,
                                 locked_at=None, completed_at=None,
-                                worker_id=None, worker_heartbeat=None)
+                                worker_id=None, worker_heartbeat=None, worker_exception=None)

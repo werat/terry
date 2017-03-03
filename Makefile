@@ -15,4 +15,4 @@ publish: build
 	twine upload dist/*
 
 cleanup:
-	rm -rf dist
+	rm -rf dist build-venv

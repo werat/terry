@@ -6,9 +6,8 @@ python:
   - 3.6
 
 env:
-  - MONGODB=3.2.12
-  - MONGODB=3.4.3
-  - MONGODB=3.5.5
+  global:
+     - MONGODB=3.4.3
   
 matrix:
   include:

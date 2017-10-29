@@ -1,12 +1,20 @@
 language: python
 
+env:
+  matrix:
+    - MONGODB=3.2.12
+    - MONGODB=3.4.3
+    - MONGODB=3.5.5
+
+install:
+  - wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${MONGODB}.tgz
+  - tar xzf mongodb-linux-x86_64-${MONGODB}.tgz
+  - ${PWD}/mongodb-linux-x86_64-${MONGODB}/bin/mongod --version
+  - pip install tox
+
 before_script:
-  - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
-  - echo 'deb [ arch=amd64 ] http://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.4 multiverse' | sudo tee /etc/apt/sources.list.d/mongodb-org-3.4.list
-  - sudo apt-get update
-  - sudo apt-get install -y mongodb-org=3.4.0
-  - sleep 5  # mongo may not be responded directly. See http://docs.travis-ci.com/user/database-setup/#MongoDB
-  - mongo --version
+  - mkdir ${PWD}/mongodb-linux-x86_64-${MONGODB}/data
+  - ${PWD}/mongodb-linux-x86_64-${MONGODB}/bin/mongod --dbpath ${PWD}/mongodb-linux-x86_64-${MONGODB}/data --logpath ${PWD}/mongodb-linux-x86_64-${MONGODB}/mongodb.log --fork
 
 matrix:
   include:
@@ -17,9 +25,7 @@ matrix:
     - python: 3.6
       env: TOXENV=py36
 
-install: pip3 install tox
-
-script: python3 -m tox
+script: python -m tox
 
 notifications:
   email: false

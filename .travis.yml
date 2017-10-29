@@ -1,10 +1,7 @@
 language: python
 
 env:
-  matrix:
-    - MONGODB=3.2.12
-    - MONGODB=3.4.3
-    - MONGODB=3.5.5
+  - MONGODB=3.4.3
 
 install:
   - wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${MONGODB}.tgz

@@ -3,7 +3,7 @@ language: python
 env:
   global:
      - MONGODB=3.4.3
-  
+
 matrix:
   include:
     - python: 2.7
@@ -23,7 +23,7 @@ before_script:
   - mkdir ${PWD}/mongodb-linux-x86_64-${MONGODB}/data
   - ${PWD}/mongodb-linux-x86_64-${MONGODB}/bin/mongod --dbpath ${PWD}/mongodb-linux-x86_64-${MONGODB}/data --logpath ${PWD}/mongodb-linux-x86_64-${MONGODB}/mongodb.log --fork
 
-script: python3 -m tox
+script: python -m tox
 
 after_script:
   - pkill mongod

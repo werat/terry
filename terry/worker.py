@@ -97,7 +97,7 @@ class WorkerThread(threading.Thread):
             self.interrupted = True
         except _RequeueRequested:
             pass
-        except:
+        except Exception:
             self.exc_info = sys.exc_info()
 
 
